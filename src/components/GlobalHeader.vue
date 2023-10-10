@@ -16,7 +16,7 @@
             <div class="title">ZWYOJ</div>
           </div>
         </a-menu-item>
-        <a-menu-item v-for="item in routes" :key="item.path">
+        <a-menu-item v-for="item in visibleRoutes" :key="item.path">
           {{ item.name }}
         </a-menu-item>
       </a-menu>
@@ -32,10 +32,29 @@
 <script setup lang="ts">
 import { routes } from "../router/routes";
 import { useRouter } from "vue-router";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useStore } from "vuex";
+import checkAccess from "@/access/checkAccess";
 
 const router = useRouter();
+const store = useStore();
+const loginUser = store.state.user.loginUser;
+
+// 展示在菜单的路由数组
+const visibleRoutes = computed(() => {
+  return routes.filter((item, index) => {
+    if (item.meta?.hideInMenu) {
+      return false;
+    }
+    // 根据权限过滤菜单
+    if (
+      !checkAccess(store.state.user.loginUser, item?.meta?.access as string)
+    ) {
+      return false;
+    }
+    return true;
+  });
+});
 
 const selectedKeys = ref(["/"]);
 
@@ -49,8 +68,12 @@ const doMenuClick = (key: string) => {
   });
 };
 
-const store = useStore();
-console.log(store.state.user.loginUser);
+// setTimeout(() => {
+//   store.dispatch("user/getLoginUser", {
+//     userName: "zwy",
+//     userRole: ACCESS_ENUM.ADMIN,
+//   });
+// }, 3000);
 </script>
 
 <style scoped>
